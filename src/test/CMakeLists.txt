@@ -57,6 +57,7 @@ set(buildblock_simple_tests
 	test_filename_functions
 	test_VoxelsOnCartesianGrid
 	test_zoom_image
+	test_zoom_image_adjoint
 	test_ByteOrder
 	test_Scanner
 	test_ArcCorrection

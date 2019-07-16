@@ -123,6 +123,9 @@ SingleScatterSimulation::
   }
 #endif
 
+  const float detection_efficiency_no_scatter =
+    detection_efficiency(511.F);
+
   float scatter_ratio=0 ;
 
   scatter_ratio= 
@@ -131,7 +134,8 @@ SingleScatterSimulation::
     *atten_to_detB
     *atten_to_detA
     *scatter_point_mu
-    *detection_efficiency_scatter;
+    *detection_efficiency_scatter
+    *detection_efficiency_no_scatter;
                 
 
   const CartesianCoordinate3D<float> 

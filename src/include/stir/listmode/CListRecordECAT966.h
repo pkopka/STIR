@@ -140,6 +140,20 @@ class CListEventECAT966 : public CListEventCylindricalScannerWithViewTangRingRin
   };
 };
 
+//! A class for storing and using a energy'event' from a listmode file from the ECAT 966 scanner
+/*! \ingroup listmode
+ */
+class CListEnergyECAT966 : public CListEnergy
+{
+ public:
+  bool is_energy() const
+  {return true; }
+  inline double get_energyA_in_keV() const
+  { return 0.F;  }
+  inline double get_energyB_in_keV() const
+  { return 0.F;  }
+};
+
 //! A class for decoding a raw  timing 'event' from a listmode file from the ECAT 966 scanner
 /*! \ingroup listmode
      This class just provides the bit-field definitions. You should normally use CListTimeECAT966.
@@ -220,6 +234,10 @@ class CListRecordECAT966 : public CListRecordWithGatingInput
     { return this->time_data; }
   virtual const CListTimeECAT966&   time() const
     { return this->time_data; }
+  virtual CListEnergyECAT966&   energy()
+    { return this->energy_data; }
+  virtual const CListEnergyECAT966&   energy() const
+    { return this->energy_data; }
   virtual CListTimeECAT966&  gating_input()
     { return this->time_data; }
   virtual const CListTimeECAT966&  gating_input() const
@@ -258,6 +276,7 @@ class CListRecordECAT966 : public CListRecordWithGatingInput
  private:
   CListEventECAT966  event_data;
   CListTimeECAT966   time_data; 
+  CListEnergyECAT966 energy_data;
   boost::int32_t         raw;
 
 };

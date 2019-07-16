@@ -22,7 +22,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
-    See STIR/LICENSE.txt for details
+    See STIR/LICENSE.txt for details//
 */
 
 /* Possible compilation switches:

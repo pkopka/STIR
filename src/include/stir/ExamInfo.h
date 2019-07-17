@@ -59,8 +59,8 @@ public :
     : start_time_in_secs_since_1970(0.)
     {
       num_energy_windows = 1;
-      low_energy_thres.resize(1);
-      up_energy_thres.resize(1);
+      low_energy_thres.resize(num_energy_windows);
+      up_energy_thres.resize(num_energy_windows);
       low_energy_thres[0] = 450.f;
       up_energy_thres[0] = 650.f;
       en_win_pair.resize(2);

@@ -155,13 +155,13 @@ InterfileHeader::InterfileHeader()
   data_offset_each_dataset.resize(num_time_frames, 0UL);
 
   data_offset = 0UL;
-  //num_en_win = -1;
-  lower_en_window_thres.resize(1);
-  upper_en_window_thres.resize(1);
+
+  lower_en_window_thres.resize(2);
+  upper_en_window_thres.resize(2);
   lower_en_window_thres[0]=-1.F;
   upper_en_window_thres[0]=-1.F;
   num_en_win = -1;
-  energy_window_pair.resize(2);
+  energy_window_pair.resize(1);
   energy_window_pair[0]=-1.f;
   energy_window_pair[1]=-1.f;
   add_key("name of data file", 
@@ -358,15 +358,24 @@ bool InterfileHeader::post_processing()
                lln_quantification_units);
     }      
   } // lln_quantification_units
-    if (upper_en_window_thres[0] > 0 && lower_en_window_thres[0] > 0 )
-    {
-  exam_info_sptr->set_high_energy_thres(upper_en_window_thres[0]);
-  exam_info_sptr->set_low_energy_thres(lower_en_window_thres[0]);
-    }
+
+
+      // set energy window threshold
+      for (int i = 0; i < num_en_win; ++i)
+      {
+
+        if (upper_en_window_thres[i] > 0 && lower_en_window_thres[i] > 0 )
+        {
+          exam_info_sptr->set_high_energy_thres(upper_en_window_thres[i],i);
+          exam_info_sptr->set_low_energy_thres(lower_en_window_thres[i],i);
+        }
+       }
 
     if (num_en_win > 0 )
     {
+        //set number of energy window
          exam_info_sptr->set_num_energy_windows(num_en_win);
+
          //set the number of energy window pair
         if (energy_window_pair.size() > 0) {
 

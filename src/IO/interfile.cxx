@@ -472,16 +472,17 @@ static void write_interfile_energy_windows(std::ostream& output_header, const Ex
 {
     output_header << "number of energy windows := " <<
       exam_info.get_num_energy_windows() << '\n';
-
-  if (exam_info.get_high_energy_thres() > 0 &&
-      exam_info.get_low_energy_thres() >= 0)
+    for (unsigned int num_windows = 0; num_windows <  exam_info.get_num_energy_windows(); ++num_windows)
     {
-      output_header << "energy window lower level := " <<
-        exam_info.get_low_energy_thres() << '\n';
-      output_header << "energy window upper level :=  " <<
-        exam_info.get_high_energy_thres() << '\n';
-    }
-
+      if (exam_info.get_high_energy_thres() > 0 &&
+          exam_info.get_low_energy_thres() >= 0)
+        {
+          output_header << "energy window lower level [" << num_windows +1  << "] := " <<
+            exam_info.get_low_energy_thres(num_windows) << '\n';
+          output_header << "energy window upper level [" << num_windows +1  << "] := " <<
+            exam_info.get_high_energy_thres(num_windows) << '\n';
+        }
+     }
   output_header << "energy window pair :="<<" {"<<  exam_info.get_energy_window_pair().first  <<
                    ',' <<  exam_info.get_energy_window_pair().second <<"}\n";
 }

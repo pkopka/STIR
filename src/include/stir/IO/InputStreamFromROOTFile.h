@@ -133,9 +133,9 @@ public:
 
     virtual int get_num_trans_crystals_per_singles_unit() const = 0;
     //! Lower energy threshold
-    inline float get_low_energy_thres() const;
+    inline float get_low_energy_thres(int en_win = 0) const;
     //! Upper energy threshold
-    inline float get_up_energy_thres() const;
+    inline float get_up_energy_thres(int en_win = 0) const;
     //! Number of energy windows
     //inline float get_num_energy_windows() const;
 
@@ -152,9 +152,9 @@ public:
 
     inline void set_detectors_offset(int);
 
-    inline void set_low_energy_window(float);
+    inline void set_low_energy_window(float, int en_win = 0);
 
-    inline void set_upper_energy_window(float);
+    inline void set_upper_energy_window(float, int en_win = 0);
     //! Set the read_optional_root_fields flag
     inline void set_optional_ROOT_fields(bool);
 
@@ -199,9 +199,9 @@ protected:
     //! Skip random events (eventID1 != eventID2)
     bool exclude_randoms;
     //! Lower energy threshold
-    float low_energy_window;
+    std::vector<float> low_energy_window;
     //! Upper energy threshold
-    float up_energy_window;
+    std::vector<float> up_energy_window;
     //! This value will apply a rotation on the detectors' id in the same ring.
     int offset_dets;
     //!For the singles_readout_depth from GATE's online documentation:

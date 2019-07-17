@@ -223,6 +223,12 @@ public:
 
     virtual Succeeded set_up();
 
+    virtual void set_defaults();
+    virtual void initialise_keymap();
+    //! \warning post_processing will set everything that has a file name in
+    //! the par file. The corresponding set functions should be used either
+    //! for files that are not stored in the drive.
+    virtual bool post_processing();
 
 protected:
 
@@ -235,14 +241,6 @@ protected:
     compute_emis_to_det_points_solid_angle_factor(const CartesianCoordinate3D<float>& emis_point,
                                                   const CartesianCoordinate3D<float>& detector_coord);
 
-
-
-    virtual void set_defaults();
-    virtual void initialise_keymap();
-    //! \warning post_processing will set everything that has a file name in
-    //! the par file. The corresponding set functions should be used either
-    //! for files that are not stored in the drive.
-    virtual bool post_processing();
 
     enum image_type{act_image_type, att_image_type};
     struct ScatterPoint

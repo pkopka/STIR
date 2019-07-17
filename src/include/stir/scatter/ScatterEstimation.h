@@ -171,11 +171,12 @@ public:
     //! Output the log of the process.
     virtual void write_log() const;
 
-protected:
     //! All recomputes_** will default true
     virtual void set_defaults();
     virtual void initialise_keymap();
     virtual bool post_processing();
+
+protected:
 
     //!
     //! \brief set_up_iterative

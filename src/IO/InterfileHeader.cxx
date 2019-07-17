@@ -359,8 +359,6 @@ bool InterfileHeader::post_processing()
 
    exam_info_sptr->set_num_energy_windows(num_en_win);
 
-   std::cout<< "en thres:" << upper_en_window_thres << '\n';
-   std::cout<< "num en win:" << num_en_win << '\n';
 
   exam_info_sptr->time_frame_definitions = 
     TimeFrameDefinitions(image_relative_start_times, image_durations);

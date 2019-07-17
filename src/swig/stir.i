@@ -102,6 +102,12 @@
 #include <boost/format.hpp>
 #include <stdexcept>
 
+#include "stir/IO/write_to_file.h"
+#include "stir/scatter/ScatterSimulation.h"
+#include "stir/scatter/SingleScatterSimulation.h"
+#include "stir/scatter/ScatterEstimation.h"
+#include "stir/scatter/SingleScatterLikelihoodAndGradient.h"
+    
    // TODO need this (bug in swig)
    // this bug occurs (only?) when using "%template(name) someclass;" inside the namespace
    // as opposed to "%template(name) stir::someclass" outside the namespace
@@ -1262,6 +1268,9 @@ namespace stir {
 
 } // namespace stir
 
+%include "stir/IO/write_to_file.h"
+%template(write_image_to_file) stir::write_to_file<DiscretisedDensity<3, float> >;
+
 %include "stir/ZoomOptions.h"
 %include "stir/zoom.h"
 
@@ -1672,3 +1681,35 @@ namespace stir {
   stir::RegisteredParsingObject<stir::BackProjectorByBinUsingProjMatrixByBin,
      stir::BackProjectorByBin>;
 %include "stir/recon_buildblock/BackProjectorByBinUsingProjMatrixByBin.h"
+
+//scatter
+%shared_ptr(stir::ScatterSimulation);
+%shared_ptr(stir::RegisteredParsingObject<
+            stir::SingleScatterSimulation,
+            stir::ScatterSimulation,
+            stir::ScatterSimulation
+            >);
+%shared_ptr(stir::SingleScatterSimulation);
+
+%include "stir/scatter/ScatterSimulation.h"
+
+%template (internalRPSingleScatterSimulation) stir::RegisteredParsingObject<
+stir::SingleScatterSimulation,
+stir::ScatterSimulation,
+stir::ScatterSimulation
+>;
+
+%include "stir/scatter/SingleScatterSimulation.h"
+
+%shared_ptr(stir::ScatterEstimation);
+%shared_ptr(stir::ParsingObject);
+%include "stir/scatter/ScatterEstimation.h"
+
+%shared_ptr(stir::RegisteredParsingObject<
+            stir::SingleScatterLikelihoodAndGradient,
+            stir::SingleScatterSimulation,
+            stir::SingleScatterSimulation
+            >);
+%shared_ptr(stir::SingleScatterLikelihoodAndGradient);
+
+%include "stir/scatter/SingleScatterLikelihoodAndGradient.h"

@@ -377,7 +377,7 @@ bool InterfileHeader::post_processing()
          exam_info_sptr->set_num_energy_windows(num_en_win);
 
          //set the number of energy window pair
-        if (energy_window_pair.size() > 0) {
+       /* if (energy_window_pair.size() > 0) {
 
             if (energy_window_pair.size() != 2)
                 error("should have two.");
@@ -389,9 +389,9 @@ bool InterfileHeader::post_processing()
                 error("The selected window %d exceeds the  number of energy windows %d.\n",energy_window_pair[0],num_en_win);
             if (energy_window_pair[1] > num_en_win)
                 error("The selected window %d exceeds the  number of energy windows %d.\n",energy_window_pair[1],num_en_win);
-
+*/
             exam_info_sptr->set_energy_window_pair(energy_window_pair);
-        }
+        //}
      }
 
 

@@ -136,6 +136,8 @@ public:
     inline float get_low_energy_thres() const;
     //! Upper energy threshold
     inline float get_up_energy_thres() const;
+    //! Number of energy windows
+    //inline float get_num_energy_windows() const;
 
     //! Set singles_readout_depth
     inline void set_singles_readout_depth(int);

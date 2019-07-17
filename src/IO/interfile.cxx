@@ -470,6 +470,9 @@ static void write_interfile_time_frame_definitions(std::ostream& output_header, 
 // Write energy window lower and upper thresholds, if they are not -1
 static void write_interfile_energy_windows(std::ostream& output_header, const ExamInfo& exam_info)
 {
+    output_header << "number of energy windows := " <<
+      exam_info.get_num_energy_windows() << '\n';
+
   if (exam_info.get_high_energy_thres() > 0 &&
       exam_info.get_low_energy_thres() >= 0)
     {

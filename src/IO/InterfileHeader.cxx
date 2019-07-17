@@ -155,6 +155,7 @@ InterfileHeader::InterfileHeader()
   data_offset_each_dataset.resize(num_time_frames, 0UL);
 
   data_offset = 0UL;
+  num_en_win = -1;
   lower_en_window_thres = -1.f;
   upper_en_window_thres = -1.f;
 
@@ -225,11 +226,15 @@ InterfileHeader::InterfileHeader()
   add_key("quantification units",
     KeyArgument::DOUBLE, &lln_quantification_units);
 
+  add_key("number of energy windows",
+         KeyArgument::INT, &num_en_win);
+
   add_key("energy window lower level",
          KeyArgument::FLOAT, &lower_en_window_thres);
 
   add_key("energy window upper level",
          KeyArgument::FLOAT, &upper_en_window_thres);
+
 
   bed_position_horizontal = 0.F;
   add_key("start horizontal bed position (mm)", &bed_position_horizontal);
@@ -351,6 +356,11 @@ bool InterfileHeader::post_processing()
   exam_info_sptr->set_high_energy_thres(upper_en_window_thres);
   exam_info_sptr->set_low_energy_thres(lower_en_window_thres);
     }
+
+   exam_info_sptr->set_num_energy_windows(num_en_win);
+
+   std::cout<< "en thres:" << upper_en_window_thres << '\n';
+   std::cout<< "num en win:" << num_en_win << '\n';
 
   exam_info_sptr->time_frame_definitions = 
     TimeFrameDefinitions(image_relative_start_times, image_durations);

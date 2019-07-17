@@ -58,6 +58,7 @@ public :
   ExamInfo()
     : start_time_in_secs_since_1970(0.)
     {
+      num_energy_windows = 1;
       low_energy_thres = 450.f;
       up_energy_thres = 650.f;
   }
@@ -85,17 +86,20 @@ public :
   inline float get_high_energy_thres() const;
   //@}
 
+  inline int get_num_energy_windows() const;
   //! \name Functions that set values related on the acquisition settings
   //@{
   //! Set the low energy boundary
   inline void set_low_energy_thres(float new_val);
   //! Set the high energy boundary
   inline void set_high_energy_thres(float new_val);
+
+  inline void set_num_energy_windows(int new_val);
   //@}
 
   inline bool has_energy_information() const
   {
-    return (low_energy_thres > 0.f)&&(up_energy_thres > 0.f);
+    return (low_energy_thres > 0.f)&&(up_energy_thres > 0.f)&&(num_energy_windows > 0);
   }
 
   //! Standard trick for a 'virtual copy-constructor'
@@ -132,6 +136,12 @@ public :
   //! This parameter was initially introduced for scatter simulation
   //! If scatter simulation is not needed, can default to -1
   float up_energy_thres;
+
+  //!
+  //! \brief num_energy_windows
+  //! \author Ludovica Brusaferri
+  //! \details This is the number of energy windows
+  float num_energy_windows;
 };
 
 END_NAMESPACE_STIR

@@ -165,6 +165,11 @@ public :
   //! \details High energy window limit
   float upper_en_window_thres;
   // end acquisition parameters
+
+  //!
+  //! \brief number of energy windows
+  int num_en_win;
+  // end acquisition parameters
   
  protected:
   // version 3.3 had only a single offset. we'll internally replace it with data_offset_each_dataset

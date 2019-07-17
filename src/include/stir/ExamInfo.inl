@@ -50,6 +50,12 @@ ExamInfo::set_high_energy_thres(float new_val)
     up_energy_thres = new_val;
 }
 
+void
+ExamInfo::set_num_energy_windows(int new_val)
+{
+    num_energy_windows = new_val;
+}
+
 float
 ExamInfo::get_low_energy_thres() const
 {
@@ -60,6 +66,12 @@ float
 ExamInfo::get_high_energy_thres() const
 {
     return up_energy_thres;
+}
+
+int
+ExamInfo::get_num_energy_windows() const
+{
+    return num_energy_windows;
 }
 
 END_NAMESPACE_STIR

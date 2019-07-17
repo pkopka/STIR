@@ -84,16 +84,16 @@ public :
   inline float get_low_energy_thres() const;
   //! Get the high energy boundary
   inline float get_high_energy_thres() const;
-  //@}
-
+  //! Get the number of energy windows
   inline int get_num_energy_windows() const;
+  //@}
   //! \name Functions that set values related on the acquisition settings
   //@{
   //! Set the low energy boundary
   inline void set_low_energy_thres(float new_val);
   //! Set the high energy boundary
   inline void set_high_energy_thres(float new_val);
-
+  //! Set the number of energy windows
   inline void set_num_energy_windows(int new_val);
   //@}
 

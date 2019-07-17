@@ -164,7 +164,6 @@ public :
   //! \brief upper_en_window_thres
   //! \details High energy window limit
   float upper_en_window_thres;
-  // end acquisition parameters
 
   //!
   //! \brief number of energy windows

@@ -61,6 +61,9 @@ public :
       num_energy_windows = 1;
       low_energy_thres = 450.f;
       up_energy_thres = 650.f;
+      en_win_pair.resize(2);
+      en_win_pair[0]=1;
+      en_win_pair[1]=1;
   }
 
   std::string originating_system;
@@ -86,6 +89,8 @@ public :
   inline float get_high_energy_thres() const;
   //! Get the number of energy windows
   inline int get_num_energy_windows() const;
+  //! Get the energy window pair
+  inline std::pair<int,int> get_energy_window_pair() const;
   //@}
   //! \name Functions that set values related on the acquisition settings
   //@{
@@ -95,11 +100,13 @@ public :
   inline void set_high_energy_thres(float new_val);
   //! Set the number of energy windows
   inline void set_num_energy_windows(int new_val);
+  //! Set energy window
+  inline void set_energy_window_pair(std::vector<int> & new_val);
   //@}
 
   inline bool has_energy_information() const
   {
-    return (low_energy_thres > 0.f)&&(up_energy_thres > 0.f)&&(num_energy_windows > 0);
+    return (low_energy_thres > 0.f)&&(up_energy_thres > 0.f)&&(num_energy_windows > 0)&&(en_win_pair[0] > 0)&&(en_win_pair[1]  > 0);
   }
 
   //! Standard trick for a 'virtual copy-constructor'
@@ -142,6 +149,10 @@ public :
   //! \author Ludovica Brusaferri
   //! \details This is the number of energy windows
   float num_energy_windows;
+
+  //!
+  //! \brief energy window pair
+  std::vector<int>	en_win_pair;
 };
 
 END_NAMESPACE_STIR

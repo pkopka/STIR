@@ -482,8 +482,8 @@ static void write_interfile_energy_windows(std::ostream& output_header, const Ex
         exam_info.get_high_energy_thres() << '\n';
     }
 
-  output_header << "energy window pair :="<<" {"<<  2  <<
-                   ',' <<  5 <<"}\n";
+  output_header << "energy window pair :="<<" {"<<  exam_info.get_energy_window_pair().first  <<
+                   ',' <<  exam_info.get_energy_window_pair().second <<"}\n";
 }
 
 // Write data type descriptions (if there are any)

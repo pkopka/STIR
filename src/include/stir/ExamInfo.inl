@@ -56,6 +56,13 @@ ExamInfo::set_num_energy_windows(int new_val)
     num_energy_windows = new_val;
 }
 
+
+void
+ExamInfo::set_energy_window_pair(std::vector<int> &val)
+{
+   en_win_pair=val;
+}
+
 float
 ExamInfo::get_low_energy_thres() const
 {
@@ -73,5 +80,22 @@ ExamInfo::get_num_energy_windows() const
 {
     return num_energy_windows;
 }
+
+std::pair<int,int>
+ExamInfo::get_energy_window_pair() const
+{
+
+    std::pair<int,int> pair;
+    pair.first = 0;
+    pair.second = 0;
+
+
+    pair.first=en_win_pair[0];
+    pair.second=en_win_pair[1];
+
+    return pair;
+}
+
+
 
 END_NAMESPACE_STIR

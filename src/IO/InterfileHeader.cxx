@@ -155,7 +155,7 @@ InterfileHeader::InterfileHeader()
   data_offset_each_dataset.resize(num_time_frames, 0UL);
 
   data_offset = 0UL;
-  num_en_win = -1;
+  //num_en_win = -1;
   lower_en_window_thres = -1.f;
   upper_en_window_thres = -1.f;
   energy_window_pair.resize(2);
@@ -361,6 +361,24 @@ bool InterfileHeader::post_processing()
     }
 
    exam_info_sptr->set_num_energy_windows(num_en_win);
+   //exam_info_sptr->set_energy_window_pair(energy_window_pair);
+
+   //set the number of energy window pair
+  if (energy_window_pair.size() > 0) {
+
+      if (energy_window_pair.size() != 2)
+          error("should have two.");
+      if (energy_window_pair[0] < 0)
+          error("first window should be >= 0.");
+      if (energy_window_pair[1] < 0)
+          error("second window should be >= 0.");
+      if (energy_window_pair[0] > num_en_win)
+          error("The selected window %d exceeds the  number of energy windows %d.\n",energy_window_pair[0],num_en_win);
+      if (energy_window_pair[1] > num_en_win)
+          error("The selected window %d exceeds the  number of energy windows %d.\n",energy_window_pair[1],num_en_win);
+
+      exam_info_sptr->set_energy_window_pair(energy_window_pair);
+  }
 
 
   exam_info_sptr->time_frame_definitions = 

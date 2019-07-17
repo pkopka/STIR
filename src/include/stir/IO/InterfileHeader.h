@@ -168,6 +168,10 @@ public :
   //!
   //! \brief number of energy windows
   int num_en_win;
+
+  //!
+  //! \brief energy window pair
+  std::vector<int>	energy_window_pair;
   // end acquisition parameters
   
  protected:

@@ -158,6 +158,7 @@ InterfileHeader::InterfileHeader()
   num_en_win = -1;
   lower_en_window_thres = -1.f;
   upper_en_window_thres = -1.f;
+  energy_window_pair.resize(2);
 
   add_key("name of data file", 
     KeyArgument::ASCII,	&data_file_name);
@@ -234,6 +235,8 @@ InterfileHeader::InterfileHeader()
 
   add_key("energy window upper level",
          KeyArgument::FLOAT, &upper_en_window_thres);
+  add_key("energy window pair",
+         KeyArgument::LIST_OF_INTS, &energy_window_pair);
 
 
   bed_position_horizontal = 0.F;

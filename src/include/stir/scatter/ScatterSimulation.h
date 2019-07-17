@@ -271,7 +271,7 @@ protected:
      * @{
      */
 
-    float detection_efficiency(const float energy) const;
+    float detection_efficiency(const float energy, int en_window = 0) const;
 
 
     //! maximum angle to consider above which detection after Compton scatter is considered too small

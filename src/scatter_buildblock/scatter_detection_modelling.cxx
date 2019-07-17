@@ -97,7 +97,7 @@ compute_emis_to_det_points_solid_angle_factor(
 
 float
 ScatterSimulation::
-detection_efficiency(const float energy) const
+detection_efficiency(const float energy,int en_window) const
 {
   // factor 2.35482 is used to convert FWHM to sigma
   const float sigma_times_sqrt2= 
@@ -107,8 +107,8 @@ detection_efficiency(const float energy) const
   // sigma_times_sqrt2= sqrt(2) * sigma   // resolution proportional to FWHM    
   
   const float efficiency =
-    0.5f*( erf((this->template_exam_info_sptr->get_high_energy_thres()-energy)/sigma_times_sqrt2)
-          - erf((this->template_exam_info_sptr->get_low_energy_thres()-energy)/sigma_times_sqrt2 ));
+    0.5f*( erf((this->template_exam_info_sptr->get_high_energy_thres(en_window)-energy)/sigma_times_sqrt2)
+          - erf((this->template_exam_info_sptr->get_low_energy_thres(en_window)-energy)/sigma_times_sqrt2 ));
   /* Maximum efficiency is 1.*/
   return efficiency;
 }

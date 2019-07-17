@@ -158,12 +158,12 @@ public :
   //!
   //! \brief lower_en_window_thres
   //! \details Low energy window limit
-  float lower_en_window_thres;
+  std::vector<float> lower_en_window_thres;
 
   //!
   //! \brief upper_en_window_thres
   //! \details High energy window limit
-  float upper_en_window_thres;
+  std::vector<float> upper_en_window_thres;
 
   //!
   //! \brief number of energy windows

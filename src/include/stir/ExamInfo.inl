@@ -39,15 +39,15 @@ create_shared_clone() const
 }
 
 void
-ExamInfo::set_low_energy_thres(float new_val)
+ExamInfo::set_low_energy_thres(float new_val,int en_win)
 {
-    low_energy_thres = new_val;
+    low_energy_thres[en_win] = new_val;
 }
 
 void
-ExamInfo::set_high_energy_thres(float new_val)
+ExamInfo::set_high_energy_thres(float new_val,int en_win)
 {
-    up_energy_thres = new_val;
+    up_energy_thres[en_win] = new_val;
 }
 
 void
@@ -64,15 +64,15 @@ ExamInfo::set_energy_window_pair(std::vector<int> &val)
 }
 
 float
-ExamInfo::get_low_energy_thres() const
+ExamInfo::get_low_energy_thres(int en_win) const
 {
-    return low_energy_thres;
+    return low_energy_thres[en_win];
 }
 
 float
-ExamInfo::get_high_energy_thres() const
+ExamInfo::get_high_energy_thres(int en_win) const
 {
-    return up_energy_thres;
+    return up_energy_thres[en_win];
 }
 
 int

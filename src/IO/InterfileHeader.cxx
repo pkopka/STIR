@@ -156,8 +156,10 @@ InterfileHeader::InterfileHeader()
 
   data_offset = 0UL;
   //num_en_win = -1;
-  lower_en_window_thres = -1.f;
-  upper_en_window_thres = -1.f;
+  lower_en_window_thres.resize(1);
+  upper_en_window_thres.resize(1);
+  lower_en_window_thres[0]=-1.F;
+  upper_en_window_thres[0]=-1.F;
   num_en_win = -1;
   energy_window_pair.resize(2);
   energy_window_pair[0]=-1.f;
@@ -356,10 +358,10 @@ bool InterfileHeader::post_processing()
                lln_quantification_units);
     }      
   } // lln_quantification_units
-    if (upper_en_window_thres > 0 && lower_en_window_thres > 0 )
+    if (upper_en_window_thres[0] > 0 && lower_en_window_thres[0] > 0 )
     {
-  exam_info_sptr->set_high_energy_thres(upper_en_window_thres);
-  exam_info_sptr->set_low_energy_thres(lower_en_window_thres);
+  exam_info_sptr->set_high_energy_thres(upper_en_window_thres[0]);
+  exam_info_sptr->set_low_energy_thres(lower_en_window_thres[0]);
     }
 
     if (num_en_win > 0 )

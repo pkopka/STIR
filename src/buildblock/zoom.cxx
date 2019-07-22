@@ -654,4 +654,21 @@ transpose_zoom_image(VoxelsOnCartesianGrid<float> &image_out,
         image_out*= scale_image;
     
 }
+
+void
+zoom_image_swig(VoxelsOnCartesianGrid<float> &image_out,
+       const VoxelsOnCartesianGrid<float> &image_in, const int zoom_option)
+{
+    ZoomOptions::Scaling zo = ZoomOptions::Scaling(zoom_option);
+    zoom_image(image_out, image_in,zo);
+}
+
+void
+transpose_zoom_image_swig(VoxelsOnCartesianGrid<float> &image_out,
+       const VoxelsOnCartesianGrid<float> &image_in, const int zoom_option)
+{
+    ZoomOptions::Scaling zo = ZoomOptions::Scaling(zoom_option);
+    transpose_zoom_image(image_out, image_in, zo);
+}
+
 END_NAMESPACE_STIR

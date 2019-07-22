@@ -729,6 +729,8 @@ L_G_for_viewgram_from_est_data(const Viewgram<float>& viewgram, const Viewgram<f
             }
         }
     }
+
+
     // now compute scatter for all bins
 
        double sum = 0;
@@ -744,9 +746,8 @@ L_G_for_viewgram_from_est_data(const Viewgram<float>& viewgram, const Viewgram<f
 
            const Bin bin = all_bins[i];
 
-    //forward model
            const double y = L_G_estimate(tmp_gradient_image,bin,compute_gradient,isgradient_mu);
-           gradient_image += tmp_gradient_image*v_est[bin.axial_pos_num()][bin.tangential_pos_num()];
+           gradient_image += tmp_gradient_image*v_est[bin.axial_pos_num()][bin.tangential_pos_num()]*viewgram[bin.axial_pos_num()][bin.tangential_pos_num()];
        }
 
        return sum;

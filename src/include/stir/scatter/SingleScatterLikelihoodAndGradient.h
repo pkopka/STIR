@@ -102,9 +102,6 @@ public:
 
     void low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram,const Viewgram<float>& v_add, Viewgram<float>& v_est,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const float rescale, const bool compute_gradient,const bool isgradient_mu);
 
-    void low_res_ratio_for_view_segment_number(const ProjData&data, const ProjData&add_sino, ProjData& est_data,std::vector<float> &ratio,const ViewSegmentNumbers& vs_num);
-
-    void low_res_ratio_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<float>& v_add,Viewgram<float>& v_est,std::vector<float> &ratio);
 };
 
 END_NAMESPACE_STIR

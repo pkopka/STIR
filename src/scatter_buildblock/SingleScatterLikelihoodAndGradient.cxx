@@ -707,16 +707,18 @@ line_contribution_act(VoxelsOnCartesianGrid<float>& gradient_image,
     
 }
 
-double
+shared_ptr<ProjData>
 SingleScatterLikelihoodAndGradient::
-likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_projdata, ProjData &est_data, VoxelsOnCartesianGrid<float>& gradient_image,const bool compute_gradient, const bool isgradient_mu)
+likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_projdata, VoxelsOnCartesianGrid<float>& gradient_image,const bool compute_gradient, const bool isgradient_mu)
 {
     gradient_image.fill(0);
     std::vector<VoxelsOnCartesianGrid<float> > gradient_image_array;
+    gradient_image_array.push_back(gradient_image);
     double sum  = 0;
-    //low_res_jacobian(est_data, gradient_image, compute_gradient, isgradient_mu);
+    shared_ptr<ProjData> data = low_res_jacobian(projdata,add_projdata, gradient_image_array, compute_gradient, isgradient_mu);
 
-    ViewSegmentNumbers vs_num;
+    gradient_image += gradient_image_array[0];
+    /*ViewSegmentNumbers vs_num;
     for (vs_num.segment_num() = projdata.get_min_segment_num(); vs_num.segment_num() <= projdata.get_max_segment_num(); ++vs_num.segment_num())
     {
         for (vs_num.view_num() = projdata.get_min_view_num(); vs_num.view_num() <= projdata.get_max_view_num();++vs_num.view_num())
@@ -725,7 +727,7 @@ likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_pr
             Viewgram<float> est_sino=est_data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
             Viewgram<float> add_sino=add_projdata.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
             std::vector<Bin> all_bins;
-            {
+
                 Bin bin(sino.get_segment_num(), sino.get_view_num(), 0, 0);
 
                 for (bin.axial_pos_num() = projdata.get_min_axial_pos_num(bin.segment_num()); bin.axial_pos_num() <= projdata.get_max_axial_pos_num(bin.segment_num()); ++bin.axial_pos_num())
@@ -746,23 +748,20 @@ likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_pr
                 }
             }
         }
-    }
+    }*/
 
     return
-       sum;
+       data;
 
 }
 
 shared_ptr<ProjData>
 SingleScatterLikelihoodAndGradient::
-low_res_jacobian(const ProjData& data,const ProjData &add_sino,VoxelsOnCartesianGrid<float>& gradient_image,const bool compute_gradient, const bool isgradient_mu, const float rescale)
+low_res_jacobian(const ProjData& data,const ProjData &add_sino, std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient, const bool isgradient_mu, const float rescale)
 {
 
     this->output_proj_data_sptr->fill(0.f);
 
-    info("ScatterSimulator: Running Scatter Simulation ...");
-    info("ScatterSimulator: Initialising ...");
-    // The activiy image might have been changed, during the estimation process.
     this->remove_cache_for_integrals_over_activity();
     this->remove_cache_for_integrals_over_attenuation();
     this->sample_scatter_points();
@@ -822,7 +821,7 @@ low_res_jacobian(const ProjData& data,const ProjData &add_sino,VoxelsOnCartesian
             //info(boost::format("ScatterSimulator: %d / %d") % bin_counter% total_bins);
 
 
-            this->low_res_jacobian_for_view_segment_number(data, add_sino,gradient_image,vs_num,rescale,compute_gradient,isgradient_mu);
+            this->low_res_jacobian_for_view_segment_number(data, add_sino,gradient_image_array,vs_num,rescale,compute_gradient,isgradient_mu);
 
             bin_counter +=
             this->proj_data_info_cyl_noarc_cor_sptr->get_num_axial_poss(vs_num.segment_num()) *
@@ -839,21 +838,21 @@ low_res_jacobian(const ProjData& data,const ProjData &add_sino,VoxelsOnCartesian
 
 void
 SingleScatterLikelihoodAndGradient::
-low_res_jacobian_for_view_segment_number(const ProjData&data, const ProjData&add_sino,VoxelsOnCartesianGrid<float>& gradient_image,const ViewSegmentNumbers& vs_num, const float rescale, const bool compute_gradient,const bool isgradient_mu)
+low_res_jacobian_for_view_segment_number(const ProjData&data, const ProjData&add_sino,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const ViewSegmentNumbers& vs_num, const float rescale, const bool compute_gradient,const bool isgradient_mu)
 {
 
     Viewgram<float> viewgram=data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
     Viewgram<float> v_add=add_sino.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
     Viewgram<float> v_est= this->proj_data_info_cyl_noarc_cor_sptr->get_empty_viewgram(vs_num.view_num(), vs_num.segment_num());
 
-    low_res_jacobian_for_viewgram(viewgram,v_add,v_est,gradient_image, rescale, compute_gradient,isgradient_mu);
+    low_res_jacobian_for_viewgram(viewgram,v_add,v_est,gradient_image_array, rescale, compute_gradient,isgradient_mu);
     output_proj_data_sptr->set_viewgram(v_est);
 
 }
 
 void
 SingleScatterLikelihoodAndGradient::
-low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<float>& v_add,Viewgram<float>& v_est,VoxelsOnCartesianGrid<float>& gradient_image,const float rescale,const bool compute_gradient, const bool isgradient_mu)
+low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<float>& v_add,Viewgram<float>& v_est,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const float rescale,const bool compute_gradient, const bool isgradient_mu)
 {
 
     const ViewSegmentNumbers vs_num(viewgram.get_view_num(),viewgram.get_segment_num());
@@ -880,7 +879,7 @@ low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<fl
     // now compute scatter for all bins
 
 
-       VoxelsOnCartesianGrid<float> tmp_gradient_image(gradient_image);
+       VoxelsOnCartesianGrid<float> tmp_gradient_image(gradient_image_array[0]);
 
        for (int i = 0; i < static_cast<int>(all_bins.size()); ++i)
        {
@@ -895,7 +894,7 @@ low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<fl
            v_est[bin.axial_pos_num()][bin.tangential_pos_num()] = static_cast<float>(rescale*y);
 
            float eps = v_add[bin.axial_pos_num()][bin.tangential_pos_num()];
-           gradient_image += tmp_gradient_image*(viewgram[bin.axial_pos_num()][bin.tangential_pos_num()]/(v_est[bin.axial_pos_num()][bin.tangential_pos_num()]+eps)-1);
+           gradient_image_array[0] += tmp_gradient_image*(viewgram[bin.axial_pos_num()][bin.tangential_pos_num()]/(v_est[bin.axial_pos_num()][bin.tangential_pos_num()]+eps)-1);
 
        }
 

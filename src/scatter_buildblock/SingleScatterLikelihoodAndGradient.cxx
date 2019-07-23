@@ -714,47 +714,19 @@ likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_pr
     gradient_image.fill(0);
     int lenght = projdata.get_num_views()*projdata.get_num_axial_poss(0)*projdata.get_num_tangential_poss();
     std::vector<VoxelsOnCartesianGrid<float> > gradient_image_array;
+    std::vector<float> ratio;
     for (int i = 0 ; i <= lenght ; ++i)
     {
        gradient_image_array.push_back(gradient_image);
+       ratio.push_back(0);
     }
     shared_ptr<ProjData> est_data = low_res_jacobian(projdata,add_projdata, gradient_image_array, compute_gradient, isgradient_mu);
 
+    low_res_ratio(projdata,add_projdata, *est_data,ratio);
     for (int i = 0 ; i <= lenght ; ++i)
     {
-    gradient_image += gradient_image_array[i];
+    gradient_image += gradient_image_array[i]*ratio[i];
     }
-   /* ViewSegmentNumbers vs_num;
-    for (vs_num.segment_num() = projdata.get_min_segment_num(); vs_num.segment_num() <= projdata.get_max_segment_num(); ++vs_num.segment_num())
-    {
-        for (vs_num.view_num() = projdata.get_min_view_num(); vs_num.view_num() <= projdata.get_max_view_num();++vs_num.view_num())
-        {
-            Viewgram<float> sino=projdata.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
-            Viewgram<float> est_sino=est_data->get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
-            Viewgram<float> add_sino=add_projdata.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
-            std::vector<Bin> all_bins;
-
-                Bin bin(sino.get_segment_num(), sino.get_view_num(), 0, 0);
-
-                for (bin.axial_pos_num() = projdata.get_min_axial_pos_num(bin.segment_num()); bin.axial_pos_num() <= projdata.get_max_axial_pos_num(bin.segment_num()); ++bin.axial_pos_num())
-                {
-                    for (bin.tangential_pos_num() = projdata.get_min_tangential_pos_num();bin.tangential_pos_num() <= projdata.get_max_tangential_pos_num();++bin.tangential_pos_num())
-                    {
-                        all_bins.push_back(bin);
-                    }
-                }
-
-
-                for (int i = 0; i < static_cast<int>(all_bins.size()); ++i)
-                {
-                    const Bin bin = all_bins[i];
-                     //sum+=sino[bin.axial_pos_num()][bin.tangential_pos_num()]*log(est_sino[bin.axial_pos_num()][bin.tangential_pos_num()]+add_sino[bin.axial_pos_num()][bin.tangential_pos_num()])- est_sino[bin.axial_pos_num()][bin.tangential_pos_num()] - add_sino[bin.axial_pos_num()][bin.tangential_pos_num()];
-                     gradient_image += gradient_image_array[i]*(sino[bin.axial_pos_num()][bin.tangential_pos_num()]/(est_sino[bin.axial_pos_num()][bin.tangential_pos_num()]+add_sino[bin.axial_pos_num()][bin.tangential_pos_num()]) -1);
-
-                }
-            }
-        }
-*/
 
     return est_data;
 
@@ -899,12 +871,132 @@ low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<fl
            v_est[bin.axial_pos_num()][bin.tangential_pos_num()] = static_cast<float>(rescale*y);
 
            float eps = v_add[bin.axial_pos_num()][bin.tangential_pos_num()];
-           gradient_image_array[i] += tmp_gradient_image*(viewgram[bin.axial_pos_num()][bin.tangential_pos_num()]/(v_est[bin.axial_pos_num()][bin.tangential_pos_num()]+eps)-1);
-
+           gradient_image_array[i] += tmp_gradient_image;
        }
 
 }
 
+void
+SingleScatterLikelihoodAndGradient::
+low_res_ratio(const ProjData& data,const ProjData &add_sino, ProjData &est_data, std::vector<float> &ratio)
+{
 
+
+    ViewSegmentNumbers vs_num;
+
+    int bin_counter = 0;
+    int axial_bins = 0 ;
+    double sum = 0;
+
+    for (vs_num.segment_num() = this->proj_data_info_cyl_noarc_cor_sptr->get_min_segment_num();
+         vs_num.segment_num() <= this->proj_data_info_cyl_noarc_cor_sptr->get_max_segment_num();
+         ++vs_num.segment_num())
+        axial_bins += this->proj_data_info_cyl_noarc_cor_sptr->get_num_axial_poss(vs_num.segment_num());
+
+    const int total_bins =
+    this->proj_data_info_cyl_noarc_cor_sptr->get_num_views() * axial_bins *
+    this->proj_data_info_cyl_noarc_cor_sptr->get_num_tangential_poss();
+    /* Currently, proj_data_info.find_cartesian_coordinates_of_detection() returns
+     coordinate in a coordinate system where z=0 in the first ring of the scanner.
+     We want to shift this to a coordinate system where z=0 in the middle
+     of the scanner.
+     We can use get_m() as that uses the 'middle of the scanner' system.
+     (sorry)
+     */
+#ifndef NDEBUG
+    {
+        CartesianCoordinate3D<float> detector_coord_A, detector_coord_B;
+        // check above statement
+        this->proj_data_info_cyl_noarc_cor_sptr->find_cartesian_coordinates_of_detection(
+                                                                                         detector_coord_A, detector_coord_B, Bin(0, 0, 0, 0));
+        assert(detector_coord_A.z() == 0);
+        assert(detector_coord_B.z() == 0);
+        // check that get_m refers to the middle of the scanner
+        const float m_first =
+        this->proj_data_info_cyl_noarc_cor_sptr->get_m(Bin(0, 0, this->proj_data_info_cyl_noarc_cor_sptr->get_min_axial_pos_num(0), 0));
+        const float m_last =
+        this->proj_data_info_cyl_noarc_cor_sptr->get_m(Bin(0, 0, this->proj_data_info_cyl_noarc_cor_sptr->get_max_axial_pos_num(0), 0));
+        assert(fabs(m_last + m_first) < m_last * 10E-4);
+    }
+#endif
+    this->shift_detector_coordinates_to_origin =
+    CartesianCoordinate3D<float>(this->proj_data_info_cyl_noarc_cor_sptr->get_m(Bin(0, 0, 0, 0)), 0, 0);
+
+    info("ScatterSimulator: Initialization finished ...");
+
+    for (vs_num.segment_num() = this->proj_data_info_cyl_noarc_cor_sptr->get_min_segment_num();
+         vs_num.segment_num() <= this->proj_data_info_cyl_noarc_cor_sptr->get_max_segment_num();
+         ++vs_num.segment_num())
+    {
+        for (vs_num.view_num() = this->proj_data_info_cyl_noarc_cor_sptr->get_min_view_num();
+             vs_num.view_num() <= this->proj_data_info_cyl_noarc_cor_sptr->get_max_view_num();
+             ++vs_num.view_num())
+        {
+            //info(boost::format("ScatterSimulator: %d / %d") % bin_counter% total_bins);
+
+
+            this->low_res_ratio_for_view_segment_number(data, add_sino,est_data,ratio,vs_num);
+
+            bin_counter +=
+            this->proj_data_info_cyl_noarc_cor_sptr->get_num_axial_poss(vs_num.segment_num()) *
+            this->proj_data_info_cyl_noarc_cor_sptr->get_num_tangential_poss();
+            //info(boost::format("ScatterSimulator: %d / %d") % bin_counter% total_bins);
+
+            std::cout<< bin_counter << " / "<< total_bins <<std::endl;
+
+        }
+    }
+
+}
+
+void
+SingleScatterLikelihoodAndGradient::
+low_res_ratio_for_view_segment_number(const ProjData&data, const ProjData&add_sino, ProjData& est_data,std::vector<float> &ratio,const ViewSegmentNumbers& vs_num)
+{
+
+    Viewgram<float> viewgram = data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
+    Viewgram<float> v_add = add_sino.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
+    Viewgram<float> v_est = est_data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
+
+    low_res_ratio_for_viewgram(viewgram,v_add,v_est,ratio);
+
+}
+
+void
+SingleScatterLikelihoodAndGradient::
+low_res_ratio_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<float>& v_add,Viewgram<float>& v_est,std::vector<float> &ratio)
+{
+
+    const ViewSegmentNumbers vs_num(viewgram.get_view_num(),viewgram.get_segment_num());
+
+    // First construct a vector of all bins that we'll process.
+    // The reason for making this list before the actual calculation is that we can then parallelise over all bins
+    // without having to think about double loops.
+    std::vector<Bin> all_bins;
+    {
+        Bin bin(vs_num.segment_num(), vs_num.view_num(), 0, 0);
+
+        for (bin.axial_pos_num() = this->proj_data_info_cyl_noarc_cor_sptr->get_min_axial_pos_num(bin.segment_num());
+             bin.axial_pos_num() <= this->proj_data_info_cyl_noarc_cor_sptr->get_max_axial_pos_num(bin.segment_num());
+             ++bin.axial_pos_num())
+        {
+            for (bin.tangential_pos_num() = this->proj_data_info_cyl_noarc_cor_sptr->get_min_tangential_pos_num();
+                 bin.tangential_pos_num() <= this->proj_data_info_cyl_noarc_cor_sptr->get_max_tangential_pos_num();
+                 ++bin.tangential_pos_num())
+            {
+                all_bins.push_back(bin);
+            }
+        }
+    }
+
+       for (int i = 0; i < static_cast<int>(all_bins.size()); ++i)
+       {
+
+           const Bin bin = all_bins[i];
+
+           ratio[i] = viewgram[bin.axial_pos_num()][bin.tangential_pos_num()]/(v_est[bin.axial_pos_num()][bin.tangential_pos_num()]+v_add[bin.axial_pos_num()][bin.tangential_pos_num()])-1;
+       }
+
+}
 END_NAMESPACE_STIR
 

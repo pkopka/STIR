@@ -582,29 +582,12 @@ if(compute_gradient)
 
 
 
-double
+void
 SingleScatterLikelihoodAndGradient::
-L_G_function_from_est_data(const ProjData& data,const ProjData &est_data,VoxelsOnCartesianGrid<float>& gradient_image,const bool compute_gradient, const bool isgradient_mu, const float rescale)
+L_G_function_from_est_data(const ProjData &coeff_sino,VoxelsOnCartesianGrid<float>& gradient_image,const bool compute_gradient, const bool isgradient_mu)
 {
 
     this->output_proj_data_sptr->fill(0.f);
-
-    std::cout << "number of energy windows:= "<<  this->template_exam_info_sptr->get_num_energy_windows() << '\n';
-
-    if(this->template_exam_info_sptr->get_energy_window_pair().first!= -1 &&
-       this->template_exam_info_sptr->get_energy_window_pair().second!= -1 )
-    {
-        std::cout << "energy window pair :="<<" {"<<  this->template_exam_info_sptr->get_energy_window_pair().first  << ',' <<  this->template_exam_info_sptr->get_energy_window_pair().second <<"}\n";
-
-    }
-
-
-    for (int i = 0; i < this->template_exam_info_sptr->get_num_energy_windows(); ++i)
-    {
-        std::cout << "energy window lower level"<<"["<<i+1<<"] := "<< this->template_exam_info_sptr->get_low_energy_thres(i) << '\n';
-        std::cout << "energy window upper level"<<"["<<i+1<<"] := "<<  this->template_exam_info_sptr->get_high_energy_thres(i) << '\n';
-    }
-
 
     info("ScatterSimulator: Running Scatter Simulation ...");
     info("ScatterSimulator: Initialising ...");
@@ -668,7 +651,7 @@ L_G_function_from_est_data(const ProjData& data,const ProjData &est_data,VoxelsO
             //info(boost::format("ScatterSimulator: %d / %d") % bin_counter% total_bins);
 
 
-            sum+=this->L_G_for_view_segment_number_from_est_data(data, est_data,gradient_image,vs_num,rescale,compute_gradient,isgradient_mu);
+           this->L_G_for_view_segment_number_from_est_data(coeff_sino,gradient_image,vs_num,compute_gradient,isgradient_mu);
 
             bin_counter +=
             this->proj_data_info_cyl_noarc_cor_sptr->get_num_axial_poss(vs_num.segment_num()) *
@@ -681,34 +664,27 @@ L_G_function_from_est_data(const ProjData& data,const ProjData &est_data,VoxelsO
     }
 
 
-
-   // std::cout << "LIKELIHOOD:= " << sum << '\n';
-
-
-    return sum;
 }
 
-double
+void
 SingleScatterLikelihoodAndGradient::
-L_G_for_view_segment_number_from_est_data(const ProjData&data, const ProjData& est_data,VoxelsOnCartesianGrid<float>& gradient_image,const ViewSegmentNumbers& vs_num, const float rescale, const bool compute_gradient,const bool isgradient_mu)
+L_G_for_view_segment_number_from_est_data(const ProjData& coeff_sino,VoxelsOnCartesianGrid<float>& gradient_image,const ViewSegmentNumbers& vs_num, const bool compute_gradient,const bool isgradient_mu)
 {
 
-    Viewgram<float> viewgram=data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
-    Viewgram<float> v_est=est_data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
+    Viewgram<float> v_coeff_sino=coeff_sino.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
 
-    double sum = L_G_for_viewgram_from_est_data(viewgram,v_est,gradient_image, rescale, compute_gradient,isgradient_mu);
+    L_G_for_viewgram_from_est_data(v_coeff_sino,gradient_image, compute_gradient,isgradient_mu);
 
-    return sum;
 
 }
 
 
-double
+void
 SingleScatterLikelihoodAndGradient::
-L_G_for_viewgram_from_est_data(const Viewgram<float>& viewgram, const Viewgram<float>& v_est, VoxelsOnCartesianGrid<float>& gradient_image,const float rescale,const bool compute_gradient, const bool isgradient_mu)
+L_G_for_viewgram_from_est_data(const Viewgram<float>& v_coeff_sino, VoxelsOnCartesianGrid<float>& gradient_image,const bool compute_gradient, const bool isgradient_mu)
 {
 
-    const ViewSegmentNumbers vs_num(viewgram.get_view_num(),viewgram.get_segment_num());
+    const ViewSegmentNumbers vs_num(v_coeff_sino.get_view_num(),v_coeff_sino.get_segment_num());
 
     // First construct a vector of all bins that we'll process.
     // The reason for making this list before the actual calculation is that we can then parallelise over all bins
@@ -731,26 +707,19 @@ L_G_for_viewgram_from_est_data(const Viewgram<float>& viewgram, const Viewgram<f
     }
 
 
-    // now compute scatter for all bins
-
-       double sum = 0;
-
-
        VoxelsOnCartesianGrid<float> tmp_gradient_image(gradient_image);
 
 
        for (int i = 0; i < static_cast<int>(all_bins.size()); ++i)
        {
-    //creates a template image to fill
            tmp_gradient_image.fill(0);
 
            const Bin bin = all_bins[i];
 
            const double y = L_G_estimate(tmp_gradient_image,bin,compute_gradient,isgradient_mu);
-           gradient_image += tmp_gradient_image*v_est[bin.axial_pos_num()][bin.tangential_pos_num()]*viewgram[bin.axial_pos_num()][bin.tangential_pos_num()];
+           gradient_image += tmp_gradient_image*v_coeff_sino[bin.axial_pos_num()][bin.tangential_pos_num()];
        }
 
-       return sum;
 }
 
 
@@ -880,6 +849,34 @@ line_contribution_act(VoxelsOnCartesianGrid<float>& gradient_image,
                       detector_coord,
                       -C);
     
+}
+
+
+void
+SingleScatterLikelihoodAndGradient::
+fill_image(VoxelsOnCartesianGrid<float>& gradient_image,
+                      const ProjData& projdata)
+{
+
+    Bin bin;
+    {
+        for (bin.segment_num()=projdata.get_min_segment_num();bin.segment_num()<=projdata.get_max_segment_num();++bin.segment_num())
+            for (bin.axial_pos_num()= projdata.get_min_axial_pos_num(bin.segment_num());bin.axial_pos_num()<=projdata.get_max_axial_pos_num(bin.segment_num());++bin.axial_pos_num())
+            {
+
+                Sinogram<float> sino = projdata.get_empty_sinogram(bin.axial_pos_num(),bin.segment_num());
+
+                for (bin.view_num()=sino.get_min_view_num();bin.view_num()<=sino.get_max_view_num(); ++bin.view_num())
+                {
+                    for (bin.tangential_pos_num()= sino.get_min_tangential_pos_num();bin.tangential_pos_num()<=sino.get_max_tangential_pos_num(); ++bin.tangential_pos_num())
+                         gradient_image+=sino[bin.view_num()][bin.tangential_pos_num()];
+
+                 }
+
+              }
+
+        }
+
 }
 
 

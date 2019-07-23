@@ -671,4 +671,6 @@ transpose_zoom_image_swig(VoxelsOnCartesianGrid<float> &image_out,
     transpose_zoom_image(image_out, image_in, zo);
 }
 
+
+
 END_NAMESPACE_STIR

@@ -60,9 +60,9 @@ public:
 
     double L_G_function(const ProjData& data,VoxelsOnCartesianGrid<float>& gradient_image, const bool compute_gradient = true ,const bool isgradient_mu = true,const float rescale = 1.F);
     double L_G_function(const ProjData& data,const ProjData &add_sino,VoxelsOnCartesianGrid<float>& gradient_image,const bool compute_gradient = true ,const bool isgradient_mu = true,const float rescale = 1.F);
-    shared_ptr<ProjData> low_res_jacobian(const ProjData& data,const ProjData &add_sino,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient = true ,const bool isgradient_mu = true);
-    void low_res_ratio(const ProjData& data,const ProjData &add_sino, ProjData &v_est, std::vector<float> &ratio);
-    shared_ptr<ProjData> likelihood_and_gradient_scatter(const ProjData &data, const ProjData &add_sino, VoxelsOnCartesianGrid<float>& gradient_image_HR,VoxelsOnCartesianGrid<float>& gradient_image_LR,const bool compute_gradient, const bool isgradient_m);
+    void get_jacobian(std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient = true ,const bool isgradient_mu = true);
+    void get_ratio(const ProjData& data,const ProjData &add_sino, ProjData &v_est, std::vector<float> &ratio);
+    ProjDataInMemory likelihood_and_gradient_scatter(const ProjData &data, const ProjData &add_sino, VoxelsOnCartesianGrid<float>& gradient_image_HR,VoxelsOnCartesianGrid<float>& gradient_image_LR,const bool compute_gradient, const bool isgradient_m);
     private:
 
     void
@@ -98,9 +98,9 @@ public:
     double L_G_for_viewgram(const Viewgram<float>& viewgram,const Viewgram<float>& v_add, Viewgram<float>& v_est,VoxelsOnCartesianGrid<float>& gradient_image,const float rescale, const bool compute_gradient,const bool isgradient_mu);
 
 
-    void low_res_jacobian_for_view_segment_number(const ProjData&data,const ProjData&add_sino,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const ViewSegmentNumbers& vs_num, const bool compute_gradient,const bool isgradient_mu);
+    void low_res_jacobian_for_view_segment_number(std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const ViewSegmentNumbers& vs_num, const bool compute_gradient,const bool isgradient_mu);
 
-    void low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram,const Viewgram<float>& v_add, Viewgram<float>& v_est,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient,const bool isgradient_mu);
+    void low_res_jacobian_for_viewgram(Viewgram<float>& v_est,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient,const bool isgradient_mu);
 
 };
 

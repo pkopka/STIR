@@ -708,27 +708,28 @@ line_contribution_act(VoxelsOnCartesianGrid<float>& gradient_image,
     
 }
 
-shared_ptr<ProjData>
+ProjDataInMemory
 SingleScatterLikelihoodAndGradient::
 likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_projdata, VoxelsOnCartesianGrid<float>& gradient_image_HR, VoxelsOnCartesianGrid<float>& gradient_image_LR,const bool compute_gradient, const bool isgradient_mu)
 {
     gradient_image_LR.fill(0);
     gradient_image_HR.fill(0);
-    int lenght = projdata.get_num_views()*projdata.get_num_axial_poss(0)*projdata.get_num_tangential_poss(); //TODO: the code is for segment zero only
-    std::vector<VoxelsOnCartesianGrid<float> > gradient_image_array;
+    int lenght = this->output_proj_data_sptr->get_num_views()*this->output_proj_data_sptr->get_num_axial_poss(0)*this->output_proj_data_sptr->get_num_tangential_poss(); //TODO: the code is for segment zero only
+    std::vector<VoxelsOnCartesianGrid<float> > jacobian_array;
     std::vector<float> ratio;
     for (int i = 0 ; i <= lenght ; ++i)
     {
-       gradient_image_array.push_back(gradient_image_LR);
+       jacobian_array.push_back(gradient_image_LR);
        ratio.push_back(0);
     }
 
-    shared_ptr<ProjData> est_data = low_res_jacobian(projdata,add_projdata, gradient_image_array, compute_gradient, isgradient_mu);
-    low_res_ratio(projdata,add_projdata,*est_data,ratio);
+    get_jacobian(jacobian_array, compute_gradient, isgradient_mu);
+
+    get_ratio(projdata,add_projdata,*(this->output_proj_data_sptr),ratio);
 
     for (int i = 0 ; i <= lenght ; ++i)
     {
-    gradient_image_LR += gradient_image_array[i]*ratio[i];
+    gradient_image_LR += jacobian_array[i]*ratio[i];
     }
 
     if((gradient_image_HR.get_x_size()!=gradient_image_LR.get_x_size())||(gradient_image_HR.get_y_size()!=gradient_image_LR.get_y_size())||(gradient_image_HR.get_z_size()!=gradient_image_LR.get_z_size()))
@@ -740,13 +741,14 @@ likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_pr
 
     }
 
-    return est_data;
+    ProjDataInMemory est_data_HR = *(this->HR_output_proj_data_sptr);
+    return est_data_HR;
 
 }
 
-shared_ptr<ProjData>
+void
 SingleScatterLikelihoodAndGradient::
-low_res_jacobian(const ProjData& data,const ProjData &add_sino, std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient, const bool isgradient_mu)
+get_jacobian(std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient, const bool isgradient_mu)
 {
 
     this->output_proj_data_sptr->fill(0.f);
@@ -810,7 +812,7 @@ low_res_jacobian(const ProjData& data,const ProjData &add_sino, std::vector<Voxe
             //info(boost::format("ScatterSimulator: %d / %d") % bin_counter% total_bins);
 
 
-            this->low_res_jacobian_for_view_segment_number(data, add_sino,gradient_image_array,vs_num,compute_gradient,isgradient_mu);
+            this->low_res_jacobian_for_view_segment_number(gradient_image_array,vs_num,compute_gradient,isgradient_mu);
 
             bin_counter +=
             this->proj_data_info_cyl_noarc_cor_sptr->get_num_axial_poss(vs_num.segment_num()) *
@@ -822,29 +824,26 @@ low_res_jacobian(const ProjData& data,const ProjData &add_sino, std::vector<Voxe
         }
     }
 
-     return this->output_proj_data_sptr;
 }
 
 void
 SingleScatterLikelihoodAndGradient::
-low_res_jacobian_for_view_segment_number(const ProjData&data, const ProjData&add_sino,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const ViewSegmentNumbers& vs_num, const bool compute_gradient,const bool isgradient_mu)
+low_res_jacobian_for_view_segment_number(std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const ViewSegmentNumbers& vs_num, const bool compute_gradient,const bool isgradient_mu)
 {
 
-    Viewgram<float> viewgram=data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
-    Viewgram<float> v_add=add_sino.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
     Viewgram<float> v_est= this->proj_data_info_cyl_noarc_cor_sptr->get_empty_viewgram(vs_num.view_num(), vs_num.segment_num());
 
-    low_res_jacobian_for_viewgram(viewgram,v_add,v_est,gradient_image_array, compute_gradient,isgradient_mu);
+    low_res_jacobian_for_viewgram(v_est,gradient_image_array, compute_gradient,isgradient_mu);
     output_proj_data_sptr->set_viewgram(v_est);
 
 }
 
 void
 SingleScatterLikelihoodAndGradient::
-low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<float>& v_add,Viewgram<float>& v_est,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient, const bool isgradient_mu)
+low_res_jacobian_for_viewgram(Viewgram<float>& v_est,std::vector<VoxelsOnCartesianGrid<float> > &gradient_image_array,const bool compute_gradient, const bool isgradient_mu)
 {
 
-    const ViewSegmentNumbers vs_num(viewgram.get_view_num(),viewgram.get_segment_num());
+    const ViewSegmentNumbers vs_num(v_est.get_view_num(),v_est.get_segment_num());
 
     // First construct a vector of all bins that we'll process.
     // The reason for making this list before the actual calculation is that we can then parallelise over all bins
@@ -881,8 +880,6 @@ low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<fl
            const double y = L_G_estimate(tmp_gradient_image,bin,compute_gradient,isgradient_mu);
 
            v_est[bin.axial_pos_num()][bin.tangential_pos_num()] = static_cast<float>(y);
-
-           float eps = v_add[bin.axial_pos_num()][bin.tangential_pos_num()];
            gradient_image_array[i] += tmp_gradient_image;
        }
 
@@ -890,7 +887,7 @@ low_res_jacobian_for_viewgram(const Viewgram<float>& viewgram, const Viewgram<fl
 
 void
 SingleScatterLikelihoodAndGradient::
-low_res_ratio(const ProjData& projdata,const ProjData &add_projdata, ProjData &est_projdata, std::vector<float> &ratio_vector)
+get_ratio(const ProjData& projdata,const ProjData &add_projdata, ProjData &est_projdata, std::vector<float> &ratio_vector)
 {
 
     ProjDataInMemory ratio_HR(projdata);
@@ -963,6 +960,9 @@ low_res_ratio(const ProjData& projdata,const ProjData &add_projdata, ProjData &e
 
         }
     }
+
+    this->HR_output_proj_data_sptr.reset(new ProjDataInMemory(projdata.get_exam_info_sptr(),projdata.get_proj_data_info_sptr()->create_shared_clone()));
+    this->HR_output_proj_data_sptr->fill(est_projdata_HR);
 
 }
 

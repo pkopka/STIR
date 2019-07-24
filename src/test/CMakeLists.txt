@@ -43,6 +43,7 @@ Set(${dir_INVOLVED_TEST_EXE_SOURCES}
 	test_display
 	test_interpolate
 	test_upsample
+	test_scatter_grad
 	test_SSRB
 	test_ScatterSimulation
 )

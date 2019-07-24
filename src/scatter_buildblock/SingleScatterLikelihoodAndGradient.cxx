@@ -890,7 +890,7 @@ SingleScatterLikelihoodAndGradient::
 get_ratio(const ProjData& projdata,const ProjData &add_projdata, ProjData &est_projdata, std::vector<float> &ratio_vector)
 {
 
-    ProjDataInMemory ratio_HR(projdata);
+    ProjDataInMemory ratio_HR(projdata); 
     ProjDataInMemory est_projdata_HR(projdata);
     ProjDataInMemory ratio_LR(est_projdata);
 

@@ -36,6 +36,7 @@
 #include "stir/Scanner.h"
 #include "stir/ProjDataInfoCylindricalNoArcCorr.h"
 #include "stir/scatter/SingleScatterSimulation.h"
+#include "stir/ViewSegmentNumbers.h"
 #include "stir/scatter/ScatterEstimation.h"
 #include "stir/scatter/SingleScatterLikelihoodAndGradient.h"
 #include "stir/Sinogram.h"
@@ -55,69 +56,60 @@ class ScatterGradientTests: public RunTests
 {   
 public:
   void run_tests();
-  void fill_projdata_with_random(ProjData & projdata);
-  void fill_image_with_random(VoxelsOnCartesianGrid<float> & image);
+  double compute_likelihood(ProjData & projdata);
+  void finite_difference(VoxelsOnCartesianGrid<float> & image,VoxelsOnCartesianGrid<float> & gradient_image,float eps);
 };
 
+
 void
-ScatterGradientTests::
-fill_projdata_with_random(ProjData & projdata)
+ScatterGradientTests::finite_difference(VoxelsOnCartesianGrid<float> & image,VoxelsOnCartesianGrid<float> & gradient_image,float eps)
 {
 
-    std::random_device random_device;
-    std::mt19937 random_number_generator(random_device());
-    std::uniform_real_distribution<float> number_distribution(0,10);
-    Bin bin;
+//
+
+}
+
+double
+ScatterGradientTests::compute_likelihood(ProjData & projdata)
+{
+    double sum = 0;
+    ViewSegmentNumbers vs_num;
+    for (vs_num.segment_num() = projdata.get_min_segment_num(); vs_num.segment_num() <= projdata.get_max_segment_num(); ++vs_num.segment_num())
     {
-        for (bin.segment_num()=projdata.get_min_segment_num();
-             bin.segment_num()<=projdata.get_max_segment_num();
-             ++bin.segment_num())
-            for (bin.axial_pos_num()=
-                 projdata.get_min_axial_pos_num(bin.segment_num());
-                 bin.axial_pos_num()<=projdata.get_max_axial_pos_num(bin.segment_num());
-                 ++bin.axial_pos_num())
+        for (vs_num.view_num() = projdata.get_min_view_num();vs_num.view_num() <= projdata.get_max_view_num(); ++vs_num.view_num())
+        {
+
+            Viewgram<float> viewgram = projdata.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
+            //Viewgram<float> v_add = add_sino.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
+            //Viewgram<float> v_est = est_data.get_viewgram(vs_num.view_num(), vs_num.segment_num(),false);
+
+            const ViewSegmentNumbers vs_num(viewgram.get_view_num(),viewgram.get_segment_num());
+            std::vector<Bin> all_bins;
+            {
+                Bin bin(vs_num.segment_num(), vs_num.view_num(), 0, 0);
+                for (bin.axial_pos_num() = projdata.get_min_axial_pos_num(bin.segment_num());  bin.axial_pos_num() <= projdata.get_max_axial_pos_num(bin.segment_num());  ++bin.axial_pos_num())
+                {
+                    for (bin.tangential_pos_num() = projdata.get_min_tangential_pos_num(); bin.tangential_pos_num() <= projdata.get_max_tangential_pos_num(); ++bin.tangential_pos_num())
+                    {
+                        all_bins.push_back(bin);
+                    }
+                }
+            }
+
+            for (int i = 0; i < static_cast<int>(all_bins.size()); ++i)
             {
 
-                Sinogram<float> sino = projdata.get_empty_sinogram(bin.axial_pos_num(),bin.segment_num());
+              const Bin bin = all_bins[i];
 
-                for (bin.view_num()=sino.get_min_view_num();
-                     bin.view_num()<=sino.get_max_view_num();
-                     ++bin.view_num())
-                {
-                    for (bin.tangential_pos_num()=
-                         sino.get_min_tangential_pos_num();
-                         bin.tangential_pos_num()<=
-                         sino.get_max_tangential_pos_num();
-                         ++bin.tangential_pos_num())
-                         sino[bin.view_num()][bin.tangential_pos_num()]= number_distribution(random_number_generator);
-
-                    projdata.set_sinogram(sino);
-
-                 }
-
-              }
+              sum += viewgram[bin.axial_pos_num()][bin.tangential_pos_num()];
+            }
 
         }
+    }
+    return sum;
 }
 
-void
-ScatterGradientTests::fill_image_with_random(VoxelsOnCartesianGrid<float> & image)
-{
-    std::random_device random_device;
-    std::mt19937 random_number_generator(random_device());
-    std::uniform_real_distribution<float> number_distribution(0,10);
 
-    for(int i=0 ; i<image.get_max_z() ; i++){
-               for(int j=0 ; j<image.get_max_y(); j++){
-                   for(int k=0 ; k<image.get_max_z() ; k++){
-
-                       image[i][j][k] = number_distribution(random_number_generator);
-
-                   }
-                 }
-             }
-
-}
 
 void
 ScatterGradientTests::
@@ -159,18 +151,24 @@ run_tests()
 
     sss->set_template_proj_data_info_sptr(original_projdata_info);
 
+    int down_rings = static_cast<int>(test_scanner->get_num_rings()/6);
+    int down_dets = static_cast<int>(test_scanner->get_max_num_views()/6);
+    sss->downsample_scanner(down_rings, down_dets);
+
+
 
     shared_ptr<VoxelsOnCartesianGrid<float> > water_density(tmpl_density->clone());
     {
-        EllipsoidalCylinder phantom(tmpl_density->get_z_size()*tmpl_density->get_voxel_size().z()*0.2,
-                                    tmpl_density->get_y_size()*tmpl_density->get_voxel_size().y()*0.15,
-                                    tmpl_density->get_x_size()*tmpl_density->get_voxel_size().x()*0.15,
+        EllipsoidalCylinder phantom(tmpl_density->get_z_size()*tmpl_density->get_voxel_size().z()*0.01,
+                                    tmpl_density->get_y_size()*tmpl_density->get_voxel_size().y()*0.005,
+                                    tmpl_density->get_x_size()*tmpl_density->get_voxel_size().x()*0.005,
                                     tmpl_density->get_origin());
 
         CartesianCoordinate3D<int> num_samples(3,3,3);
         phantom.construct_volume(*water_density, num_samples);
         // Water attenuation coefficient.
         *water_density *= 9.687E-02;
+        //water_density->fill(9.687E-02);
 
     }
 
@@ -180,19 +178,18 @@ run_tests()
 
     shared_ptr<VoxelsOnCartesianGrid<float> > act_density(tmpl_density->clone());
     {
-        CartesianCoordinate3D<float> centre(tmpl_density->get_origin());
-        centre[3] += 80.f;
-        EllipsoidalCylinder phantom(tmpl_density->get_z_size()*tmpl_density->get_voxel_size().z()*2,
-                                    tmpl_density->get_y_size()*tmpl_density->get_voxel_size().y()*0.0625,
-                                    tmpl_density->get_x_size()*tmpl_density->get_voxel_size().x()*0.0625,
-                                    centre);
+        EllipsoidalCylinder phantom(tmpl_density->get_z_size()*tmpl_density->get_voxel_size().z()*0.01,
+                                    tmpl_density->get_y_size()*tmpl_density->get_voxel_size().y()*0.005,
+                                    tmpl_density->get_x_size()*tmpl_density->get_voxel_size().x()*0.005,
+                                    tmpl_density->get_origin());
 
         CartesianCoordinate3D<int> num_samples(3,3,3);
         phantom.construct_volume(*act_density, num_samples);
+        *act_density *= 2E+05;
+        //act_density->fill(2E+05);
     }
 
     sss->set_activity_image_sptr(act_density);
-    sss->default_downsampling();
 
     shared_ptr<ProjDataInfoCylindricalNoArcCorr> output_projdata_info(sss->get_template_proj_data_info_sptr());
     shared_ptr<ProjDataInMemory> sss_output(new ProjDataInMemory(exam, output_projdata_info));
@@ -201,42 +198,29 @@ run_tests()
     //check(sss->process_data() == Succeeded::yes ? true : false, "Check Scatter Simulation process");
     int lenght = sss_output->get_num_views()*sss_output->get_num_axial_poss(0)*sss_output->get_num_tangential_poss(); //TODO: the code is for segment zero only
     std::vector<VoxelsOnCartesianGrid<float> > jacobian_array;
+    VoxelsOnCartesianGrid<float> gradient_image(*water_density);
+    gradient_image.fill(0);
+    std::vector<float > ratio_array;
     for (int i = 0 ; i <= lenght ; ++i)
     {
-       jacobian_array.push_back(*(act_density));
-       jacobian_array[i].fill(0);
+       jacobian_array.push_back(gradient_image);
+       ratio_array.push_back(0);
     }
 
     sss->get_jacobian(jacobian_array,true,true);
 
     ProjDataInMemory x(sss_output->get_exam_info_sptr(),sss_output->get_proj_data_info_sptr());
-    fill_projdata_with_random(x);
+    x.fill(1);
 
     ProjDataInMemory out = *(sss->get_output_proj_data_sptr());
 
-    float cdot1 = 0;
-    float cdot2 = 0;
-    for ( int segment_num = x.get_min_segment_num(); segment_num <= x.get_max_segment_num(); ++segment_num)
-      {
-        for (int axial_pos = x.get_min_axial_pos_num(segment_num); axial_pos <= x.get_max_axial_pos_num(segment_num); ++axial_pos)
-          {
+    for (int i = 0 ; i <= lenght ; ++i)
+    {
+    gradient_image += jacobian_array[i];
+    }
 
-            const Sinogram<float> x_sinogram = x.get_sinogram(axial_pos, segment_num);
-            const Sinogram<float> Aty_sinogram = out.get_sinogram(axial_pos, segment_num);
-
-            for ( int view_num = x.get_min_view_num(); view_num <= x.get_max_view_num();view_num++)
-              {
-                for ( int tang_pos = x.get_min_tangential_pos_num(); tang_pos <= x.get_max_tangential_pos_num(); tang_pos++)
-                 {
-                     cdot2 += x_sinogram[view_num][tang_pos]*Aty_sinogram[view_num][tang_pos];
-                  }
-               }
-             }
-          }
-
-    std::cout << cdot1 << "=" << cdot2 << '\n';
-
-//  std::cout << "-------- Testing Upsampling and Downsampling ---------\n";
+    double L = compute_likelihood(out);
+    std::cout << "Likelihood: " << L <<'\n';
 
 
 }

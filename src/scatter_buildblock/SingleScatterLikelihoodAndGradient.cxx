@@ -717,6 +717,8 @@ likelihood_and_gradient_scatter(const ProjData &projdata, const ProjData &add_pr
     int lenght = this->output_proj_data_sptr->get_num_views()*this->output_proj_data_sptr->get_num_axial_poss(0)*this->output_proj_data_sptr->get_num_tangential_poss(); //TODO: the code is for segment zero only
     std::vector<VoxelsOnCartesianGrid<float> > jacobian_array;
     std::vector<float> ratio;
+    jacobian_array.reserve(lenght);
+    ratio.reserve(lenght);
     for (int i = 0 ; i <= lenght ; ++i)
     {
        jacobian_array.push_back(gradient_image_LR);

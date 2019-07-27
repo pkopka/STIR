@@ -650,7 +650,7 @@ interpolate_projdata_push(ProjData& proj_data_out,
   {
     // =================== RESIZE 'EXTENDED' OUTPUT =========================
     shared_ptr<ProjDataInfo> non_interleaved_proj_data_info_sptr = make_non_interleaved_proj_data_info(proj_data_out_info);
-    const SegmentBySinogram<float> non_interleaved_segment = make_non_interleaved_segment(*non_interleaved_proj_data_info_sptr, proj_data_out.get_segment_by_sinogram(0));
+    const SegmentBySinogram<float> non_interleaved_segment = non_interleaved_proj_data_info_sptr->get_empty_segment_by_sinogram(0);
     Array<3,float> extended = extend_segment_in_views(non_interleaved_segment,2,2); //extend the views
     extend_tangential_position(extended); //extend the tangential positions
     // ===========================PUSH ==================================

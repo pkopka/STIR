@@ -208,6 +208,11 @@ transpose_zoom_image(VoxelsOnCartesianGrid<float> &image_out,
            const VoxelsOnCartesianGrid<float> &image_in,
            const ZoomOptions = ZoomOptions::preserve_sum);
 
+void
+zoom_image_swig(VoxelsOnCartesianGrid<float> &image_out,
+           const VoxelsOnCartesianGrid<float> &image_in,
+           const int zoom_options);
+
 //------------------ 2D zooms---------------------
 
 /*! 
